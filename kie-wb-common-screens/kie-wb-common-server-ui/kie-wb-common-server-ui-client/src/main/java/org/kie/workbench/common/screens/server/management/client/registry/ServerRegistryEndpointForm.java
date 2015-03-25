@@ -136,7 +136,7 @@ public class ServerRegistryEndpointForm
         }
 
         lockScreen();
-
+        String controllerURL = GWT.getHostPageBaseURL().replaceFirst( "/" + GWT.getModuleName() + "/", "" )+"rest";
         service.call( new RemoteCallback<Server>() {
                           @Override
                           public void callback( final Server response ) {
@@ -159,7 +159,7 @@ public class ServerRegistryEndpointForm
                               return false;
                           }
                       }
-                    ).registerServer( endpointTextBox.getText(), nameTextBox.getText(), usernameTextBox.getText(), passwordTextBox.getText() );
+                    ).registerServer( endpointTextBox.getText(), nameTextBox.getText(), usernameTextBox.getText(), passwordTextBox.getText(), controllerURL );
     }
 
     private void lockScreen() {
