@@ -24,12 +24,13 @@ import javax.inject.Inject;
 import org.jboss.errai.common.client.api.Caller;
 import org.jboss.errai.common.client.api.ErrorCallback;
 import org.jboss.errai.common.client.api.RemoteCallback;
-import org.kie.server.controller.api.events.RuleConfigUpdate;
+import org.kie.server.api.model.KieScannerStatus;
+import org.kie.server.api.model.ReleaseId;
+import org.kie.server.controller.api.model.events.RuleConfigUpdated;
 import org.kie.server.controller.api.model.spec.ContainerSpec;
 import org.kie.server.controller.api.model.spec.ContainerSpecKey;
 import org.kie.server.controller.api.model.spec.RuleConfig;
-import org.kie.server.controller.api.model.spec.ScannerStatus;
-import org.kie.server.controller.api.model.spec.impl.ContainerSpecKeyImpl;
+
 import org.kie.server.controller.api.service.RuleCapabilitiesService;
 import org.kie.workbench.common.screens.server.management.client.util.State;
 import org.uberfire.client.mvp.UberView;
@@ -76,7 +77,7 @@ public class ContainerRulesConfigPresenter {
     private ContainerSpecKey containerSpecKey;
 
     private String pollInterval;
-    private ScannerStatus scannerStatus;
+    private KieScannerStatus scannerStatus;
     private String version;
 
     private State startScannerState;
@@ -122,7 +123,7 @@ public class ContainerRulesConfigPresenter {
         ruleCapabilitiesService.call( new RemoteCallback<Void>() {
             @Override
             public void callback( final Void response ) {
-                scannerStatus = ScannerStatus.STARTED;
+                scannerStatus = KieScannerStatus.STARTED;
                 setScannerStatus();
                 updateViewState();
             }
@@ -142,7 +143,7 @@ public class ContainerRulesConfigPresenter {
         ruleCapabilitiesService.call( new RemoteCallback<Void>() {
             @Override
             public void callback( final Void response ) {
-                scannerStatus = ScannerStatus.STOPPED;
+                scannerStatus = KieScannerStatus.STOPPED;
                 setScannerStatus();
                 updateViewState();
             }
@@ -162,7 +163,7 @@ public class ContainerRulesConfigPresenter {
         ruleCapabilitiesService.call( new RemoteCallback<Void>() {
             @Override
             public void callback( final Void response ) {
-                scannerStatus = ScannerStatus.STOPPED;
+                scannerStatus = KieScannerStatus.STOPPED;
                 setScannerStatus();
                 updateViewState();
             }
@@ -192,10 +193,10 @@ public class ContainerRulesConfigPresenter {
                 updateViewState();
                 return false;
             }
-        } ).versionUpgrade( containerSpecKey, version );
+        } ).upgradeContainer(containerSpecKey, new ReleaseId(null, null, version));
     }
 
-    public void onRuleConfigUpdate( @Observes final RuleConfigUpdate configUpdate ) {
+    public void onRuleConfigUpdate( @Observes final RuleConfigUpdated configUpdate ) {
         checkNotNull( "configUpdate", configUpdate );
         setRuleConfig( configUpdate.getRuleConfig(),
                        configUpdate.getReleasedId().getVersion() );
@@ -228,7 +229,7 @@ public class ContainerRulesConfigPresenter {
 
     private void setScannerStatus() {
         if ( scannerStatus == null ) {
-            this.scannerStatus = ScannerStatus.UNKNOWN;
+            this.scannerStatus = KieScannerStatus.UNKNOWN;
         }
 
         switch ( scannerStatus ) {
@@ -265,7 +266,7 @@ public class ContainerRulesConfigPresenter {
     }
 
     private ContainerSpecKey toId( final ContainerSpec containerSpec ) {
-        return new ContainerSpecKeyImpl( containerSpec.getId(),
+        return new ContainerSpecKey( containerSpec.getId(),
                                          containerSpec.getContainerName(),
                                          containerSpec.getServerTemplateKey() );
     }

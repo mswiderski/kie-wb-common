@@ -4,8 +4,8 @@ import javax.enterprise.context.Dependent;
 import javax.inject.Inject;
 
 import com.google.gwt.user.client.ui.IsWidget;
-import org.kie.server.controller.api.model.runtime.Message;
-import org.kie.server.controller.api.model.runtime.Severity;
+import org.kie.server.api.model.Message;
+import org.kie.server.api.model.Severity;
 
 import static org.uberfire.commons.validation.PortablePreconditions.*;
 

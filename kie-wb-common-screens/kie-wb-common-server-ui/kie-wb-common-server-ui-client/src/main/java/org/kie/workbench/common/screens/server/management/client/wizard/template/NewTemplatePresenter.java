@@ -8,7 +8,7 @@ import javax.inject.Inject;
 import com.google.gwt.user.client.ui.Widget;
 import org.jboss.errai.common.client.api.Caller;
 import org.jboss.errai.common.client.api.RemoteCallback;
-import org.kie.server.controller.api.service.SpecManagementService;
+import org.kie.server.controller.ui.api.service.SpecManagementService;
 import org.kie.workbench.common.screens.server.management.client.util.ContentChangeHandler;
 import org.uberfire.client.callbacks.Callback;
 import org.uberfire.client.mvp.UberView;

@@ -13,12 +13,15 @@
  * limitations under the License.
 */
 
-package org.kie.server.controller.api.model.spec;
+package org.kie.server.controller.api.backend.storage;
 
-public interface RuleConfig extends ContainerConfig {
+import javax.enterprise.context.ApplicationScoped;
 
-    Long getPollInterval();
+import org.kie.server.controller.impl.storage.InMemoryKieServerTemplateStorage;
 
-    ScannerStatus getScannerStatus();
+@ApplicationScoped
+public class ServerTemplateVFSStorage extends InMemoryKieServerTemplateStorage {    // TODO for now use the inmemory storage
 
+    public ServerTemplateVFSStorage() {
+    }
 }

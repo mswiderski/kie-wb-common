@@ -13,19 +13,17 @@
  * limitations under the License.
 */
 
-package org.kie.server.controller.api.model.spec;
+package org.kie.server.controller.ui.api.service;
 
-import org.kie.server.controller.api.model.MergeMode;
-import org.kie.server.controller.api.model.RuntimeStrategy;
+import java.util.Collection;
 
-public interface ProcessConfig extends ContainerConfig {
+import org.kie.server.controller.api.model.runtime.Container;
+import org.kie.server.controller.api.model.spec.ContainerSpecKey;
+import org.kie.server.controller.ui.api.ContainerSpecData;
 
-    RuntimeStrategy getRuntimeStrategy();
+public interface RuntimeManagementService extends org.kie.server.controller.api.service.RuntimeManagementService {
 
-    String getKBase();
+    ContainerSpecData getContainers( ContainerSpecKey containerSpecKey );
 
-    String getKSession();
-
-    MergeMode getMergeMode();
 
 }

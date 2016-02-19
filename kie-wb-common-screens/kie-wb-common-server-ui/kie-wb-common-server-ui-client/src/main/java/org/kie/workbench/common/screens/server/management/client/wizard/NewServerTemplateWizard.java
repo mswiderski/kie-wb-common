@@ -15,8 +15,7 @@ import org.kie.server.controller.api.model.spec.Capability;
 import org.kie.server.controller.api.model.spec.ContainerConfig;
 import org.kie.server.controller.api.model.spec.ContainerSpec;
 import org.kie.server.controller.api.model.spec.ServerConfig;
-import org.kie.server.controller.api.model.spec.ServerTemplate;
-import org.kie.server.controller.api.model.spec.impl.ServerTemplateImpl;
+import org.kie.server.controller.api.model.spec.ServerTemplate;;
 import org.kie.server.controller.api.service.SpecManagementService;
 import org.kie.workbench.common.screens.server.management.client.events.ServerTemplateListRefresh;
 import org.kie.workbench.common.screens.server.management.client.events.ServerTemplateSelected;
@@ -143,30 +142,30 @@ public class NewServerTemplateWizard extends AbstractMultiPageWizard {
     }
 
     private ServerTemplate buildServerTemplate() {
-        final Collection<Capability> capabilities = new ArrayList<Capability>();
+        final Collection<String> capabilities = new ArrayList<String>();
         final Map<Capability, ServerConfig> capabilityConfig = new HashMap<Capability, ServerConfig>();
         final Map<Capability, ContainerConfig> capabilityContainerConfig = new HashMap<Capability, ContainerConfig>();
         final Collection<ContainerSpec> containersSpec = new ArrayList<ContainerSpec>();
 
         if ( newTemplatePresenter.isProcessCapabilityChecked() ) {
-            capabilities.add( Capability.PROCESS );
+            capabilities.add( Capability.PROCESS.toString() );
             if ( !newContainerFormPresenter.isEmpty() ) {
                 capabilityContainerConfig.put( Capability.PROCESS, processConfigPagePresenter.buildProcessConfig() );
             }
         }
 
         if ( newTemplatePresenter.isRuleCapabilityChecked() ) {
-            capabilities.add( Capability.RULE );
+            capabilities.add( Capability.RULE.toString() );
         }
         if ( newTemplatePresenter.isPlanningCapabilityChecked() ) {
-            capabilities.add( Capability.PLANNING );
+            capabilities.add( Capability.PLANNING.toString() );
         }
 
         if ( !newContainerFormPresenter.isEmpty() ) {
             containersSpec.add( newContainerFormPresenter.buildContainerSpec( newTemplatePresenter.getTemplateName(), capabilityContainerConfig ) );
         }
 
-        return new ServerTemplateImpl( newTemplatePresenter.getTemplateName(),
+        return new ServerTemplate( newTemplatePresenter.getTemplateName(),
                                        newTemplatePresenter.getTemplateName(),
                                        capabilities,
                                        capabilityConfig,

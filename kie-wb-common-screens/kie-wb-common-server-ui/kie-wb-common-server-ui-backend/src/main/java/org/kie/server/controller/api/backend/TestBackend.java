@@ -11,50 +11,38 @@ import javax.enterprise.event.Event;
 import javax.inject.Inject;
 
 import org.jboss.errai.bus.server.annotations.Service;
-import org.kie.server.controller.api.events.ServerTemplateDeleted;
-import org.kie.server.controller.api.events.ServerTemplateUpdated;
-import org.kie.server.controller.api.events.impl.ServerTemplateDeletedImpl;
-import org.kie.server.controller.api.events.impl.ServerTemplateUpdatedImpl;
-import org.kie.server.controller.api.model.ContainerSpecData;
-import org.kie.server.controller.api.model.KieContainerStatus;
-import org.kie.server.controller.api.model.MergeMode;
-import org.kie.server.controller.api.model.ReleaseId;
-import org.kie.server.controller.api.model.RuntimeStrategy;
+import org.kie.server.api.model.KieContainerStatus;
+import org.kie.server.api.model.KieScannerStatus;
+import org.kie.server.api.model.Message;
+import org.kie.server.api.model.ReleaseId;
+import org.kie.server.api.model.Severity;
+import org.kie.server.controller.api.model.events.ServerTemplateDeleted;
+import org.kie.server.controller.api.model.events.ServerTemplateUpdated;
 import org.kie.server.controller.api.model.runtime.Container;
-import org.kie.server.controller.api.model.runtime.Message;
 import org.kie.server.controller.api.model.runtime.ServerInstance;
 import org.kie.server.controller.api.model.runtime.ServerInstanceKey;
-import org.kie.server.controller.api.model.runtime.Severity;
-import org.kie.server.controller.api.model.runtime.impl.ContainerImpl;
-import org.kie.server.controller.api.model.runtime.impl.MessageImpl;
-import org.kie.server.controller.api.model.runtime.impl.ServerInstanceImpl;
-import org.kie.server.controller.api.model.runtime.impl.ServerInstanceKeyImpl;
 import org.kie.server.controller.api.model.spec.Capability;
 import org.kie.server.controller.api.model.spec.ContainerConfig;
 import org.kie.server.controller.api.model.spec.ContainerSpec;
 import org.kie.server.controller.api.model.spec.ContainerSpecKey;
 import org.kie.server.controller.api.model.spec.ProcessConfig;
 import org.kie.server.controller.api.model.spec.RuleConfig;
-import org.kie.server.controller.api.model.spec.ScannerStatus;
 import org.kie.server.controller.api.model.spec.ServerConfig;
 import org.kie.server.controller.api.model.spec.ServerTemplate;
 import org.kie.server.controller.api.model.spec.ServerTemplateKey;
-import org.kie.server.controller.api.model.spec.impl.ContainerSpecImpl;
-import org.kie.server.controller.api.model.spec.impl.ProcessConfigImpl;
-import org.kie.server.controller.api.model.spec.impl.RuleConfigImpl;
-import org.kie.server.controller.api.model.spec.impl.ServerConfigImpl;
-import org.kie.server.controller.api.model.spec.impl.ServerTemplateImpl;
-import org.kie.server.controller.api.model.spec.impl.ServerTemplateKeyImpl;
 import org.kie.server.controller.api.service.RuleCapabilitiesService;
-import org.kie.server.controller.api.service.RuntimeManagementService;
-import org.kie.server.controller.api.service.SpecManagementService;
+import org.kie.server.controller.ui.api.ContainerSpecData;
+import org.kie.server.controller.ui.api.MergeMode;
+import org.kie.server.controller.ui.api.RuntimeStrategy;
+import org.kie.server.controller.ui.api.service.RuntimeManagementService;
+import org.kie.server.controller.ui.api.service.SpecManagementService;
 
 import static org.uberfire.commons.validation.PortablePreconditions.*;
 
 @Service
 @ApplicationScoped
 public class TestBackend implements SpecManagementService,
-                                    RuntimeManagementService,
+        RuntimeManagementService,
                                     RuleCapabilitiesService {
 
     @Inject
@@ -67,24 +55,24 @@ public class TestBackend implements SpecManagementService,
     final Map<String, ServerInstance> serverInstanceMap = new HashMap<String, ServerInstance>();
 
     public TestBackend() {
-        final ContainerSpec containerSpec1 = new ContainerSpecImpl( "My Container 1",
+        final ContainerSpec containerSpec1 = new ContainerSpec( "My Container 1",
                                                                     "My Container 1",
-                                                                    new ServerTemplateKeyImpl( "MyTemplate", "MyTemplate" ),
-                                                                    new ReleaseId( "org.kie:test:LATEST" ),
+                                                                    new ServerTemplateKey( "MyTemplate", "MyTemplate" ),
+                                                                    new ReleaseId( "org.kie", "test", "LATEST" ),
                                                                     KieContainerStatus.STARTED,
                                                                     new HashMap<Capability, ContainerConfig>() {{
-                                                                        put( Capability.RULE, new RuleConfigImpl( 1000L, ScannerStatus.DISPOSED ) );
-                                                                        put( Capability.PROCESS, new ProcessConfigImpl( RuntimeStrategy.PER_REQUEST, "my kbase", "default", MergeMode.OVERRIDE_ALL ) );
+                                                                        put( Capability.RULE, new RuleConfig( 1000L, KieScannerStatus.DISPOSED ) );
+                                                                        put( Capability.PROCESS, new ProcessConfig( RuntimeStrategy.PER_REQUEST.toString(), "my kbase", "default", MergeMode.OVERRIDE_ALL.toString() ) );
                                                                     }} );
 
-        final ContainerSpec containerSpec2 = new ContainerSpecImpl( "My Container 2",
+        final ContainerSpec containerSpec2 = new ContainerSpec( "My Container 2",
                                                                     "My Container 2",
-                                                                    new ServerTemplateKeyImpl( "MyTemplate", "MyTemplate" ),
-                                                                    new ReleaseId( "org.kie:demo:LATEST" ),
+                                                                    new ServerTemplateKey( "MyTemplate", "MyTemplate" ),
+                                                                    new ReleaseId( "org.kie", "test", "LATEST" ),
                                                                     KieContainerStatus.STARTED,
                                                                     new HashMap<Capability, ContainerConfig>() {{
-                                                                        put( Capability.RULE, new RuleConfigImpl( 1000L, ScannerStatus.DISPOSED ) );
-                                                                        put( Capability.PROCESS, new ProcessConfigImpl( RuntimeStrategy.PER_REQUEST, "xxxx", "yyyyy", MergeMode.OVERRIDE_ALL ) );
+                                                                        put( Capability.RULE, new RuleConfig( 1000L, KieScannerStatus.DISPOSED ) );
+                                                                        put( Capability.PROCESS, new ProcessConfig( RuntimeStrategy.PER_REQUEST.toString(), "xxxx", "yyyyy", MergeMode.OVERRIDE_ALL.toString() ) );
                                                                     }} );
 
         final Collection<ServerInstanceKey> serverInstanceKeys = new ArrayList<ServerInstanceKey>();
@@ -92,17 +80,17 @@ public class TestBackend implements SpecManagementService,
         {
             final Collection<Container> containers = new ArrayList<Container>();
 
-            containers.add( new ContainerImpl( containerSpec1.getId(),
+            containers.add( new Container( containerSpec1.getId(),
                                                "container1",
-                                               new ServerInstanceKeyImpl( "MyTemplate",
+                                               new ServerInstanceKey( "MyTemplate",
                                                                           "127.0.0.1",
                                                                           "127.0.0.1",
                                                                           "http://localhost:8080/" ),
                                                Collections.<Message>emptyList(),
-                                               new ReleaseId( "org.kie:test:1.8.1" ),
+                                               new ReleaseId( "org.kie", "test", "1.8.1" ),
                                                "http://localhost:8080/container1" ) );
 
-            final ServerInstance serverInstance1 = new ServerInstanceImpl( "MyTemplate",
+            final ServerInstance serverInstance1 = new ServerInstance( "MyTemplate",
                                                                            "localhost",
                                                                            "127.0.0.1",
                                                                            "http://localhost:8080/",
@@ -117,35 +105,35 @@ public class TestBackend implements SpecManagementService,
         {
             final Collection<Container> containers = new ArrayList<Container>();
 
-            containers.add( new ContainerImpl( containerSpec1.getId(),
+            containers.add( new Container( containerSpec1.getId(),
                                                "container2",
-                                               new ServerInstanceKeyImpl( "MyTemplate",
+                                               new ServerInstanceKey( "MyTemplate",
                                                                           "10.37.119.252",
                                                                           "10.37.119.252",
                                                                           "http://10.37.119.252:8080/" ),
                                                Collections.<Message>emptyList(),
-                                               new ReleaseId( "org.kie:test:1.8.1" ),
+                                               new ReleaseId( "org.kie", "test", "1.8.1" ),
                                                "http://10.37.119.252:8080/container2" ) );
 
             final Collection<Message> messages = new ArrayList<Message>();
-            messages.add( new MessageImpl( Severity.WARN, Arrays.asList( "not responding!" ) ) );
+            messages.add( new Message( Severity.WARN, Arrays.asList( "not responding!" ) ) );
 
-            containers.add( new ContainerImpl( containerSpec2.getId(),
+            containers.add( new Container( containerSpec2.getId(),
                                                "container2",
-                                               new ServerInstanceKeyImpl( "MyTemplate",
+                                               new ServerInstanceKey( "MyTemplate",
                                                                           "10.37.119.252",
                                                                           "10.37.119.252",
                                                                           "http://10.37.119.252:8080/" ),
                                                messages,
-                                               new ReleaseId( "org.kie:demo:0.1.0" ),
+                                               new ReleaseId( "org.kie", "demo", "0.1.0" ),
                                                "http://10.37.119.252:8080/container2" ) );
 
             final Collection<Message> serverMessages = new ArrayList<Message>();
-            serverMessages.add( new MessageImpl( Severity.ERROR, Arrays.asList( "SUPER ERROR FAULT!" ) ) );
-            serverMessages.add( new MessageImpl( Severity.ERROR, Arrays.asList( "SUPER ERROR FAULT2!" ) ) );
-            serverMessages.add( new MessageImpl( Severity.WARN, Arrays.asList( "not responding!" ) ) );
+            serverMessages.add( new Message( Severity.ERROR, Arrays.asList( "SUPER ERROR FAULT!" ) ) );
+            serverMessages.add( new Message( Severity.ERROR, Arrays.asList( "SUPER ERROR FAULT2!" ) ) );
+            serverMessages.add( new Message( Severity.WARN, Arrays.asList( "not responding!" ) ) );
 
-            final ServerInstance serverInstance = new ServerInstanceImpl( "MyTemplate",
+            final ServerInstance serverInstance = new ServerInstance( "MyTemplate",
                                                                           "kiedev-01",
                                                                           "10.37.119.252",
                                                                           "http://10.37.119.252:8080/",
@@ -157,11 +145,11 @@ public class TestBackend implements SpecManagementService,
             serverInstanceKeys.add( serverInstance );
         }
 
-        final ServerTemplate serverTemplate1 = new ServerTemplateImpl( "MyTemplate",
+        final ServerTemplate serverTemplate1 = new ServerTemplate( "MyTemplate",
                                                                        "MyTemplate",
-                                                                       new ArrayList<Capability>() {{
-                                                                           add( Capability.PROCESS );
-                                                                           add( Capability.RULE );
+                                                                       new ArrayList<String>() {{
+                                                                           add( Capability.PROCESS.toString() );
+                                                                           add( Capability.RULE.toString() );
                                                                        }},
                                                                        Collections.<Capability, ServerConfig>emptyMap(),
                                                                        new ArrayList<ContainerSpec>() {{
@@ -211,7 +199,7 @@ public class TestBackend implements SpecManagementService,
             throw new RuntimeException( "Server template already exists" );
         }
         serverTemplates.put( serverTemplate.getId(), serverTemplate );
-        serverTemplateUpdatedEvent.fire( new ServerTemplateUpdatedImpl( serverTemplate ) );
+        serverTemplateUpdatedEvent.fire( new ServerTemplateUpdated( serverTemplate ) );
     }
 
     @Override
@@ -243,19 +231,19 @@ public class TestBackend implements SpecManagementService,
     }
 
     @Override
-    public void deleteContainerSpec( final ContainerSpecKey containerSpecKey ) {
-        final ServerTemplate template = serverTemplates.get( containerSpecKey.getServerTemplateKey().getId() );
+    public void deleteContainerSpec(final String serverTemplateId, final String containerSpecId) {
+        final ServerTemplate template = serverTemplates.get( serverTemplateId );
         if ( template == null ) {
             throw new RuntimeException( "Server template doesn't exists" );
         }
 
-        template.deleteContainerSpec( containerSpecKey.getId() );
+        template.deleteContainerSpec( containerSpecId );
     }
 
     @Override
     public void deleteServerTemplate( final String serverTemplateId ) {
         serverTemplates.remove( serverTemplateId );
-        serverTemplateDeletedEvent.fire( new ServerTemplateDeletedImpl( serverTemplateId ) );
+        serverTemplateDeletedEvent.fire( new ServerTemplateDeleted( serverTemplateId ) );
     }
 
     @Override
@@ -277,9 +265,9 @@ public class TestBackend implements SpecManagementService,
             containerSpecs.add( copy( entry, newServerTemplateId, newServerTemplateName ) );
         }
 
-        final ServerTemplate copy = new ServerTemplateImpl( newServerTemplateId,
+        final ServerTemplate copy = new ServerTemplate( newServerTemplateId,
                                                             newServerTemplateName,
-                                                            new ArrayList<Capability>( serverTemplate.getCapabilities() ),
+                                                            serverTemplate.getCapabilities(),
                                                             configMap,
                                                             containerSpecs );
         serverTemplates.put( copy.getId(), copy );
@@ -292,10 +280,10 @@ public class TestBackend implements SpecManagementService,
         for ( Map.Entry<Capability, ContainerConfig> entry : origin.getConfigs().entrySet() ) {
             configMap.put( entry.getKey(), copy( entry.getValue() ) );
         }
-        return new ContainerSpecImpl( origin.getId(),
+        return new ContainerSpec( origin.getId(),
                                       origin.getContainerName(),
-                                      new ServerTemplateKeyImpl( newServerTemplateId, newServerTemplateName ),
-                                      new ReleaseId( origin.getReleasedId().toString() ),
+                                      new ServerTemplateKey( newServerTemplateId, newServerTemplateName ),
+                                      new ReleaseId( origin.getReleasedId() ),
                                       origin.getStatus(),
                                       configMap );
     }
@@ -303,36 +291,38 @@ public class TestBackend implements SpecManagementService,
     private ContainerConfig copy( final ContainerConfig _value ) {
         if ( _value instanceof RuleConfig ) {
             final RuleConfig value = (RuleConfig) _value;
-            return new RuleConfigImpl( value.getPollInterval(), value.getScannerStatus() );
+            return new RuleConfig( value.getPollInterval(), value.getScannerStatus() );
         } else if ( _value instanceof ProcessConfig ) {
             final ProcessConfig value = (ProcessConfig) _value;
-            return new ProcessConfigImpl( value.getRuntimeStrategy(), value.getKBase(), value.getKSession(), value.getMergeMode() );
+            return new ProcessConfig( value.getRuntimeStrategy(), value.getKBase(), value.getKSession(), value.getMergeMode() );
         }
         return null;
     }
 
     private ServerConfig copy( final ServerConfig value ) {
-        return new ServerConfigImpl();
+        return new ServerConfig();
     }
 
     private int updateContainer = 0;
 
     @Override
-    public ContainerConfig updateContainerConfig( final ContainerSpecKey containerSpecKey,
+    public void updateContainerConfig( final String serverTemplateId, final String containerSpecId,
+                                                  final Capability capability,
                                                   final ContainerConfig containerConfig ) {
-        checkNotNull( "containerSpecKey", containerSpecKey );
+        checkNotNull( "serverTemplateId", serverTemplateId );
+        checkNotNull( "containerSpecId", containerSpecId );
         checkNotNull( "containerConfig", containerConfig );
         updateContainer++;
         if ( updateContainer % 3 == 0 ) {
             throw new RuntimeException( "ERROR!" );
         }
 
-        final ServerTemplate template = serverTemplates.get( containerSpecKey.getServerTemplateKey().getId() );
+        final ServerTemplate template = serverTemplates.get( serverTemplateId );
         if ( template == null ) {
             throw new RuntimeException( "Server template doesn't exists" );
         }
 
-        final ContainerSpec containerSpec = template.getContainerSpec( containerSpecKey.getId() );
+        final ContainerSpec containerSpec = template.getContainerSpec( containerSpecId );
         if ( containerSpec == null ) {
             throw new RuntimeException( "Container spec doesn't exists" );
         }
@@ -342,18 +332,17 @@ public class TestBackend implements SpecManagementService,
             containerSpec.getConfigs().put( Capability.PROCESS, containerConfig );
         }
 
-        return containerConfig;
     }
 
     @Override
-    public ServerConfig updateServerTemplateConfig( final ServerTemplateKey serverTemplateKey,
-                                                    final ServerConfig serverTemplateConfig ) {
-        final ServerTemplate template = serverTemplates.get( serverTemplateKey.getId() );
+    public void updateServerTemplateConfig(String serverTemplateId, Capability capability, ServerConfig serverTemplateConfig) {
+
+
+        final ServerTemplate template = serverTemplates.get( serverTemplateId );
         if ( template == null ) {
             throw new RuntimeException( "Server template doesn't exists" );
         }
 
-        return null;
     }
 
     private int startContainer = 0;
@@ -373,7 +362,7 @@ public class TestBackend implements SpecManagementService,
         if ( containerSpec == null ) {
             throw new RuntimeException( "Container spec doesn't exists" );
         }
-        ( (ContainerSpecImpl) containerSpec ).setStatus( KieContainerStatus.STARTED );
+        containerSpec.setStatus( KieContainerStatus.STARTED );
     }
 
     private int stopContainer = 0;
@@ -393,7 +382,7 @@ public class TestBackend implements SpecManagementService,
         if ( containerSpec == null ) {
             throw new RuntimeException( "Container spec doesn't exists" );
         }
-        ( (ContainerSpecImpl) containerSpec ).setStatus( KieContainerStatus.STOPPED );
+        containerSpec.setStatus( KieContainerStatus.STOPPED );
     }
 
     @Override
@@ -444,7 +433,7 @@ public class TestBackend implements SpecManagementService,
 
     @Override
     public void startScanner( final ContainerSpecKey containerSpecKey,
-                              final int interval ) {
+                              final long interval ) {
         startScanner++;
         if ( startScanner % 3 == 0 ) {
             throw new RuntimeException( "ERROR!" );
@@ -461,9 +450,14 @@ public class TestBackend implements SpecManagementService,
         }
     }
 
+    @Override
+    public void upgradeContainer(ContainerSpecKey containerSpecKey, ReleaseId releaseId) {
+
+    }
+
     private int upgrade = 0;
 
-    @Override
+
     public void versionUpgrade( final ContainerSpecKey containerSpecKey,
                                 final String version ) {
         upgrade++;
@@ -479,28 +473,19 @@ public class TestBackend implements SpecManagementService,
         if ( containerSpec == null ) {
             throw new RuntimeException( "Container spec doesn't exists" );
         }
-        ( (ContainerSpecImpl) containerSpec ).setReleaseId( new ReleaseId( containerSpec.getReleasedId().getGroupId(), containerSpec.getReleasedId().getArtifactId(), version ) );
+        containerSpec.setReleasedId(new ReleaseId( containerSpec.getReleasedId().getGroupId(), containerSpec.getReleasedId().getArtifactId(), version ));
     }
 
     @Override
-    public Collection<ServerTemplateKey> getServerInstanceKey( final String serverTemplateId ) {
+    public Collection<ServerInstanceKey> getServerInstances( final String serverTemplateId ) {
+        return new ArrayList<ServerInstanceKey>(serverInstanceMap.values());
+    }
+
+    @Override
+    public Collection<Container> getContainers(ServerInstanceKey serverInstanceKey) {
         return null;
     }
 
-    @Override
-    public Collection<ServerInstance> getServerInstances( final String serverTemplateId ) {
-        return serverInstanceMap.values();
-    }
-
-    @Override
-    public Collection<Container> getContainers( final String serverInstanceId ) {
-        final ServerInstance serverInstance = serverInstanceMap.get( serverInstanceId );
-        if ( serverInstance == null ) {
-            throw new RuntimeException( "Server template doesn't exists" );
-        }
-
-        return serverInstance.getContainers();
-    }
 
     @Override
     public ContainerSpecData getContainers( final ContainerSpecKey containerSpecKey ) {
@@ -509,7 +494,7 @@ public class TestBackend implements SpecManagementService,
         for ( final ServerInstance serverInstance : serverInstanceMap.values() ) {
             for ( final Container container : serverInstance.getContainers() ) {
                 if ( container.getContainerSpecId().equals( containerSpecKey.getId() ) &&
-                        container.getServiceInstanceKey().getServerTemplateId().equals( containerSpecKey.getServerTemplateKey().getId() ) ) {
+                        container.getServerTemplateId().equals( containerSpecKey.getServerTemplateKey().getId() ) ) {
                     containers.add( container );
                 }
             }

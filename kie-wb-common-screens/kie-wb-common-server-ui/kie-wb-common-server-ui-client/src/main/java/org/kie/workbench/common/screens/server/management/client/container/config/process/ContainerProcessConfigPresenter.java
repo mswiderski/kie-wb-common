@@ -23,6 +23,7 @@ import javax.inject.Inject;
 import org.jboss.errai.common.client.api.Caller;
 import org.jboss.errai.common.client.api.ErrorCallback;
 import org.jboss.errai.common.client.api.RemoteCallback;
+import org.kie.server.controller.api.model.spec.Capability;
 import org.kie.server.controller.api.model.spec.ContainerConfig;
 import org.kie.server.controller.api.model.spec.ContainerSpecKey;
 import org.kie.server.controller.api.model.spec.ProcessConfig;
@@ -109,7 +110,9 @@ public class ContainerProcessConfigPresenter {
                                             return false;
                                         }
                                     } )
-                .updateContainerConfig( processConfigPresenter.getContainerSpecKey(),
+                .updateContainerConfig( processConfigPresenter.getContainerSpecKey().getServerTemplateKey().getId(),
+                                        processConfigPresenter.getContainerSpecKey().getId(),
+                                        Capability.PROCESS,
                                         processConfigPresenter.buildProcessConfig() );
     }
 

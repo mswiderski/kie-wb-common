@@ -13,8 +13,12 @@
  * limitations under the License.
 */
 
-package org.kie.server.controller.api.model.spec;
+package org.kie.server.controller.ui.api;
 
-public interface PlanningConfig extends ContainerConfig {
+public enum MergeMode {
+    KEEP_ALL,
+    OVERRIDE_ALL,
+    OVERRIDE_EMPTY,
+    MERGE_COLLECTIONS;
 
 }

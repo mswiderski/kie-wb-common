@@ -27,8 +27,7 @@ import com.google.gwt.user.client.ui.IsWidget;
 import org.jboss.errai.common.client.api.Caller;
 import org.jboss.errai.common.client.api.ErrorCallback;
 import org.jboss.errai.common.client.api.RemoteCallback;
-import org.kie.server.controller.api.model.ContainerSpecData;
-import org.kie.server.controller.api.model.KieContainerStatus;
+import org.kie.server.api.model.KieContainerStatus;
 import org.kie.server.controller.api.model.runtime.Container;
 import org.kie.server.controller.api.model.spec.Capability;
 import org.kie.server.controller.api.model.spec.ContainerConfig;
@@ -36,8 +35,9 @@ import org.kie.server.controller.api.model.spec.ContainerSpec;
 import org.kie.server.controller.api.model.spec.ContainerSpecKey;
 import org.kie.server.controller.api.model.spec.ProcessConfig;
 import org.kie.server.controller.api.model.spec.RuleConfig;
-import org.kie.server.controller.api.service.RuntimeManagementService;
-import org.kie.server.controller.api.service.SpecManagementService;
+import org.kie.server.controller.ui.api.ContainerSpecData;
+import org.kie.server.controller.ui.api.service.RuntimeManagementService;
+import org.kie.server.controller.ui.api.service.SpecManagementService;
 import org.kie.workbench.common.screens.server.management.client.container.config.process.ContainerProcessConfigPresenter;
 import org.kie.workbench.common.screens.server.management.client.container.config.rules.ContainerRulesConfigPresenter;
 import org.kie.workbench.common.screens.server.management.client.container.status.ContainerRemoteStatusPresenter;
@@ -227,7 +227,7 @@ public class ContainerPresenter {
                         serverTemplateSelectedEvent.fire( new ServerTemplateSelected( containerSpec.getServerTemplateKey() ) );
                         return false;
                     }
-                } ).deleteContainerSpec( containerSpec );
+                } ).deleteContainerSpec( containerSpec.getServerTemplateKey().getId(), containerSpec.getId() );
             }
         } );
     }

@@ -23,7 +23,6 @@ import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 
 import org.kie.server.controller.api.model.spec.ServerTemplateKey;
-import org.kie.server.controller.api.model.spec.impl.ServerTemplateKeyImpl;
 import org.kie.workbench.common.screens.server.management.client.events.AddNewServerTemplate;
 import org.kie.workbench.common.screens.server.management.client.events.ServerTemplateListRefresh;
 import org.kie.workbench.common.screens.server.management.client.events.ServerTemplateSelected;
@@ -92,7 +91,7 @@ public class ServerNavigationPresenter {
     }
 
     public void select( final String id ) {
-        serverTemplateSelectedEvent.fire( new ServerTemplateSelected( new ServerTemplateKeyImpl( id, "" ) ) );
+        serverTemplateSelectedEvent.fire( new ServerTemplateSelected( new ServerTemplateKey( id, "" ) ) );
     }
 
     public void clear() {

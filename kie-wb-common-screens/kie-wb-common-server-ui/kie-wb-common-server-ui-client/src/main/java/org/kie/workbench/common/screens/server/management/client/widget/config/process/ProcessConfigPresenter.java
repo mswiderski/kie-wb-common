@@ -21,7 +21,6 @@ import javax.inject.Inject;
 
 import org.kie.server.controller.api.model.spec.ContainerSpecKey;
 import org.kie.server.controller.api.model.spec.ProcessConfig;
-import org.kie.server.controller.api.model.spec.impl.ProcessConfigImpl;
 import org.kie.workbench.common.screens.server.management.client.util.ClientMergeMode;
 import org.kie.workbench.common.screens.server.management.client.util.ClientRuntimeStrategy;
 import org.uberfire.client.mvp.UberView;
@@ -112,10 +111,10 @@ public class ProcessConfigPresenter {
     }
 
     public ProcessConfig buildProcessConfig() {
-        return new ProcessConfigImpl( ClientRuntimeStrategy.convert( view.getRuntimeStrategy() ).getRuntimeStrategy(),
+        return new ProcessConfig( view.getRuntimeStrategy(),
                                       view.getKBase(),
                                       view.getKSession(),
-                                      ClientMergeMode.convert( view.getMergeMode() ).getMergeMode() );
+                                      view.getMergeMode() ) ;
     }
 
 }

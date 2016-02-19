@@ -29,15 +29,15 @@ import org.guvnor.m2repo.service.M2RepoService;
 import org.jboss.errai.common.client.api.Caller;
 import org.jboss.errai.common.client.api.RemoteCallback;
 import org.jboss.errai.ioc.client.container.IOC;
-import org.kie.server.controller.api.model.KieContainerStatus;
-import org.kie.server.controller.api.model.ReleaseId;
+import org.kie.server.api.model.KieContainerStatus;
+import org.kie.server.api.model.ReleaseId;
 import org.kie.server.controller.api.model.spec.Capability;
 import org.kie.server.controller.api.model.spec.ContainerConfig;
 import org.kie.server.controller.api.model.spec.ContainerSpec;
 import org.kie.server.controller.api.model.spec.ServerTemplate;
-import org.kie.server.controller.api.model.spec.impl.ContainerSpecImpl;
-import org.kie.server.controller.api.model.spec.impl.ServerTemplateKeyImpl;
-import org.kie.server.controller.api.service.SpecManagementService;
+import org.kie.server.controller.api.model.spec.ContainerSpec;
+import org.kie.server.controller.api.model.spec.ServerTemplateKey;
+import org.kie.server.controller.ui.api.service.SpecManagementService;
 import org.kie.workbench.common.screens.server.management.client.events.DependencyPathSelectedEvent;
 import org.kie.workbench.common.screens.server.management.client.util.ContentChangeHandler;
 import org.kie.workbench.common.screens.server.management.client.widget.artifact.ArtifactListWidgetPresenter;
@@ -292,9 +292,9 @@ public class NewContainerFormPresenter implements WizardPage {
 
     public ContainerSpec buildContainerSpec( final String serverTemplateId,
                                              final Map<Capability, ContainerConfig> configs ) {
-        return new ContainerSpecImpl( view.getContainerName(),
+        return new ContainerSpec( view.getContainerName(),
                                       view.getContainerName(),
-                                      new ServerTemplateKeyImpl( serverTemplateId, null ),
+                                      new ServerTemplateKey( serverTemplateId, null ),
                                       new ReleaseId( view.getGroupId(), view.getArtifactId(), view.getVersion() ),
                                       KieContainerStatus.STOPPED,
                                       configs );

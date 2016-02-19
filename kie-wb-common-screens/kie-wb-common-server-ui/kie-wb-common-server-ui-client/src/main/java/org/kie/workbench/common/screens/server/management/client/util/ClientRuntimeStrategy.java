@@ -1,6 +1,6 @@
 package org.kie.workbench.common.screens.server.management.client.util;
 
-import org.kie.server.controller.api.model.RuntimeStrategy;
+import org.kie.server.controller.ui.api.RuntimeStrategy;
 
 public enum ClientRuntimeStrategy {
     SINGLETON( "Singleton", RuntimeStrategy.SINGLETON ),

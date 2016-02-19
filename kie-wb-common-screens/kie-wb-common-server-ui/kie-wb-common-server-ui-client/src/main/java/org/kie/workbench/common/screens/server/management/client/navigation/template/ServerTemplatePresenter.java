@@ -133,7 +133,7 @@ public class ServerTemplatePresenter {
             containerSpecSelectedEvent.fire( new ContainerSpecSelected( firstContainerSpec ) );
         }
 
-        for ( final ServerInstanceKey serverInstanceKey : serverTemplate.getServerIntanceKeys() ) {
+        for ( final ServerInstanceKey serverInstanceKey : serverTemplate.getServerInstanceKeys() ) {
             addServerInstance( serverInstanceKey );
         }
     }

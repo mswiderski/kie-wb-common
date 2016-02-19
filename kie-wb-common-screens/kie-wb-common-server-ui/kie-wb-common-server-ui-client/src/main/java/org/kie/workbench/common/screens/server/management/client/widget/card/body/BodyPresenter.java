@@ -8,7 +8,7 @@ import javax.inject.Inject;
 
 import com.google.gwt.user.client.ui.IsWidget;
 import org.jboss.errai.ioc.client.container.IOC;
-import org.kie.server.controller.api.model.runtime.Message;
+import org.kie.server.api.model.Message;
 import org.kie.workbench.common.screens.server.management.client.widget.card.body.notification.NotificationPresenter;
 import org.uberfire.client.mvp.UberView;
 

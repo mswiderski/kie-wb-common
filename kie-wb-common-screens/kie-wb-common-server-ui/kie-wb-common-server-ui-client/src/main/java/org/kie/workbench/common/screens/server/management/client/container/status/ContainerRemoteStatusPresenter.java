@@ -54,7 +54,7 @@ public class ContainerRemoteStatusPresenter {
         this.view.clear();
         for ( Container container : containers ) {
             final ContainerCardPresenter cardPresenter = newCard();
-            cardPresenter.setup( container.getServiceInstanceKey(), container );
+            cardPresenter.setup( container.getServerInstanceKey(), container );
             view.addCard( cardPresenter.getView().asWidget() );
         }
     }
