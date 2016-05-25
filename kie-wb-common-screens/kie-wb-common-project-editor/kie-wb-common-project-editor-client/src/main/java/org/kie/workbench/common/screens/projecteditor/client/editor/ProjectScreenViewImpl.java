@@ -16,6 +16,7 @@
 
 package org.kie.workbench.common.screens.projecteditor.client.editor;
 
+import java.util.Collection;
 import javax.enterprise.context.Dependent;
 import javax.inject.Inject;
 
@@ -49,6 +50,7 @@ import org.gwtbootstrap3.client.ui.constants.ButtonSize;
 import org.gwtbootstrap3.client.ui.constants.ButtonType;
 import org.gwtbootstrap3.client.ui.constants.IconType;
 import org.gwtbootstrap3.client.ui.constants.Toggle;
+import org.kie.server.controller.api.model.spec.ServerTemplate;
 import org.kie.workbench.common.screens.projecteditor.client.forms.KModuleEditorPanel;
 import org.kie.workbench.common.screens.projecteditor.client.forms.dependencies.DependencyGrid;
 import org.kie.workbench.common.screens.projecteditor.client.forms.repositories.RepositoriesWidgetPresenter;
@@ -404,46 +406,36 @@ public class ProjectScreenViewImpl
                     } );
                 }} );
 
-                add( new AnchorListItem( ProjectEditorResources.CONSTANTS.BuildAndInstall() ) {{
+                add( new AnchorListItem( ProjectEditorResources.CONSTANTS.BuildAndDeploy() ) {{
                     addClickHandler( new ClickHandler() {
                         @Override
                         public void onClick( ClickEvent event ) {
-                            presenter.triggerBuildAndInstall();
+                            presenter.triggerBuildAndDeploy();
                         }
                     } );
                 }} );
-                if ( supportDeployToRuntime ) {
-                    add( new AnchorListItem( ProjectEditorResources.CONSTANTS.BuildAndDeploy() ) {{
-                        addClickHandler( new ClickHandler() {
-                            @Override
-                            public void onClick( ClickEvent event ) {
-                                deploymentScreenPopupView.configure( new Command() {
-                                    @Override
-                                    public void execute() {
-                                        String username = deploymentScreenPopupView.getUsername();
-                                        String password = deploymentScreenPopupView.getPassword();
-                                        String serverURL = deploymentScreenPopupView.getServerURL();
-                                        presenter.triggerBuildAndDeploy( username, password, serverURL );
-                                        deploymentScreenPopupView.hide();
-                                    }
-                                } );
-                                deploymentScreenPopupView.show();
-                            }
-                        } );
-                    }} );
-                }
+
+                add( new AnchorListItem( ProjectEditorResources.CONSTANTS.BuildAndDeployAndProvision() ) {{
+                    addClickHandler( new ClickHandler() {
+                        @Override
+                        public void onClick( ClickEvent event ) {
+                            presenter.loadServerTemplates();
+                            deploymentScreenPopupView.configure( new Command() {
+                                @Override
+                                public void execute() {
+                                    String containerId = deploymentScreenPopupView.getContainerId();
+                                    String serverTemplate = deploymentScreenPopupView.getServerTemplate();
+
+                                    presenter.triggerBuildAndDeployAndProvision( containerId, serverTemplate );
+                                    deploymentScreenPopupView.hide();
+                                }
+                            } );
+                        }
+                    } );
+                }} );
+
             }} );
         }};
-    }
-
-    @Override
-    public void setDeployToRuntimeSetting( Boolean supports ) {
-        this.supportDeployToRuntime = supports;
-
-        if ( supports != null ) {
-            deploymentsHeader.setVisible( supports.booleanValue() );
-            deploymentDescriptorButton.setVisible( supports.booleanValue() );
-        }
     }
 
     @Override
@@ -601,5 +593,31 @@ public class ProjectScreenViewImpl
                                                                      );
         popup.setClosable( false );
         popup.show();
+    }
+
+    @Override
+    public void setServerTemplates(Collection<ServerTemplate> serverTemplates) {
+        if (serverTemplates != null && !serverTemplates.isEmpty()) {
+            for (ServerTemplate serverTemplate : serverTemplates) {
+                deploymentScreenPopupView.addServerTemplate(serverTemplate);
+            }
+            // show it only when there are active servers
+            deploymentScreenPopupView.show();
+        }
+    }
+
+    @Override
+    public String getContainerId() {
+        return deploymentScreenPopupView.getContainerId();
+    }
+
+    @Override
+    public String getServerTemplate() {
+        return deploymentScreenPopupView.getServerTemplate();
+    }
+
+    @Override
+    public boolean getStartContainer() {
+        return deploymentScreenPopupView.getStartContainer();
     }
 }

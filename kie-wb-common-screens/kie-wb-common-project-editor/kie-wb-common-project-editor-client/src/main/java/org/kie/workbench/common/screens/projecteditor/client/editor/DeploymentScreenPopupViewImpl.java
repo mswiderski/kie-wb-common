@@ -22,17 +22,22 @@ import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.user.client.Command;
 import com.google.gwt.user.client.ui.Widget;
+import org.gwtbootstrap3.client.ui.CheckBox;
 import org.gwtbootstrap3.client.ui.FormGroup;
+import org.gwtbootstrap3.client.ui.FormLabel;
 import org.gwtbootstrap3.client.ui.HelpBlock;
-import org.gwtbootstrap3.client.ui.Input;
 import org.gwtbootstrap3.client.ui.ModalBody;
 import org.gwtbootstrap3.client.ui.TextBox;
 import org.gwtbootstrap3.client.ui.constants.ModalBackdrop;
 import org.gwtbootstrap3.client.ui.constants.ValidationState;
+import org.gwtbootstrap3.extras.select.client.ui.Option;
+import org.gwtbootstrap3.extras.select.client.ui.Select;
 import org.jboss.errai.security.shared.api.identity.User;
+import org.kie.server.controller.api.model.spec.ServerTemplate;
 import org.kie.workbench.common.screens.projecteditor.client.resources.ProjectEditorResources;
 import org.uberfire.ext.widgets.common.client.common.popups.BaseModal;
 import org.uberfire.ext.widgets.common.client.common.popups.footers.ModalFooterOKCancelButtons;
+import org.uberfire.ext.widgets.core.client.resources.i18n.CoreConstants;
 
 public class DeploymentScreenPopupViewImpl extends BaseModal {
 
@@ -48,31 +53,31 @@ public class DeploymentScreenPopupViewImpl extends BaseModal {
     private User identity;
 
     @UiField
-    FormGroup userNameTextGroup;
+    FormGroup containerIdTextGroup;
 
     @UiField
-    TextBox userNameText;
+    TextBox containerIdText;
 
     @UiField
-    HelpBlock userNameTextHelpInline;
+    HelpBlock containerIdTextHelpInline;
 
     @UiField
-    FormGroup passwordTextGroup;
+    FormLabel serverTemplateLabel;
 
     @UiField
-    Input passwordText;
+    FormGroup serverTemplateGroup;
 
     @UiField
-    HelpBlock passwordTextHelpInline;
+    Select serverTemplateDropdown;
 
     @UiField
-    FormGroup serverURLTextGroup;
+    HelpBlock serverTemplateHelpInline;
 
     @UiField
-    TextBox serverURLText;
+    public CheckBox startContainerCheck;
 
     @UiField
-    HelpBlock serverURLTextHelpInline;
+    public FormGroup startContainerRow;
 
     private Command callbackCommand;
 
@@ -80,23 +85,16 @@ public class DeploymentScreenPopupViewImpl extends BaseModal {
         @Override
         public void execute() {
 
-            if ( isEmpty( userNameText.getText() ) ) {
-                userNameTextGroup.setValidationState( ValidationState.ERROR );
-                userNameTextHelpInline.setText( ProjectEditorResources.CONSTANTS.FieldMandatory0( "Username" ) );
+            if ( isEmpty( containerIdText.getText() ) ) {
+                containerIdTextGroup.setValidationState( ValidationState.ERROR );
+                containerIdTextHelpInline.setText( ProjectEditorResources.CONSTANTS.FieldMandatory0( "ContainerId" ) );
 
                 return;
             }
 
-            if ( isEmpty( passwordText.getText() ) ) {
-                passwordTextGroup.setValidationState( ValidationState.ERROR );
-                passwordTextHelpInline.setText( ProjectEditorResources.CONSTANTS.FieldMandatory0( "Password" ) );
-
-                return;
-            }
-
-            if ( isEmpty( serverURLText.getText() ) ) {
-                serverURLTextGroup.setValidationState( ValidationState.ERROR );
-                serverURLTextHelpInline.setText( ProjectEditorResources.CONSTANTS.FieldMandatory0( "ServerURL" ) );
+            if ( isEmpty(serverTemplateDropdown.getValue()) ) {
+                serverTemplateGroup.setValidationState(ValidationState.ERROR);
+                serverTemplateHelpInline.setText(ProjectEditorResources.CONSTANTS.FieldMandatory0( "Server template" ));
 
                 return;
             }
@@ -136,26 +134,41 @@ public class DeploymentScreenPopupViewImpl extends BaseModal {
             add( uiBinder.createAndBindUi( DeploymentScreenPopupViewImpl.this ) );
         }} );
         add( footer );
+
+        addServerTemplateSelectEntry();
     }
 
     public void configure( Command command ) {
         this.callbackCommand = command;
-
-        // set default values for the fields
-        userNameText.setText( identity.getIdentifier() );
-        serverURLText.setText( GWT.getModuleBaseURL().replaceFirst( "/" + GWT.getModuleName() + "/", "" ) );
     }
 
-    public String getUsername() {
-        return this.userNameText.getText();
+    public void addServerTemplateSelectEntry() {
+        final Option option = new Option();
+        option.setText( CoreConstants.INSTANCE.SelectEntry() );
+        serverTemplateDropdown.add(option);
+        serverTemplateDropdown.refresh();
     }
 
-    public String getPassword() {
-        return this.passwordText.getText();
+    public void addServerTemplate( final ServerTemplate serverTemplate ) {
+        final String text = serverTemplate.getName();
+        final String value = serverTemplate.getName();
+        final Option option = new Option();
+        option.setText( text );
+        option.setValue( value );
+        serverTemplateDropdown.add(option);
+        serverTemplateDropdown.refresh();
     }
 
-    public String getServerURL() {
-        return this.serverURLText.getText();
+    public String getContainerId() {
+        return this.containerIdText.getText();
+    }
+
+    public String getServerTemplate() {
+        return this.serverTemplateDropdown.getValue();
+    }
+
+    public boolean getStartContainer() {
+        return startContainerCheck.getValue();
     }
 
 }
