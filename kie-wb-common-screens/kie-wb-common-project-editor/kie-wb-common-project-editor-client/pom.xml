@@ -38,6 +38,10 @@
       <artifactId>gwtbootstrap3</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.gwtbootstrap3</groupId>
+      <artifactId>gwtbootstrap3-extras</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.guvnor</groupId>
       <artifactId>guvnor-structure-api</artifactId>
     </dependency>
@@ -182,6 +186,21 @@
     <dependency>
       <groupId>org.uberfire</groupId>
       <artifactId>uberfire-client-all</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.kie.server</groupId>
+      <artifactId>kie-server-api</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.kie.server</groupId>
+      <artifactId>kie-server-controller-api</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>org.kie.workbench.screens</groupId>
+      <artifactId>kie-wb-common-server-ui-api</artifactId>
     </dependency>
 
     <dependency>
