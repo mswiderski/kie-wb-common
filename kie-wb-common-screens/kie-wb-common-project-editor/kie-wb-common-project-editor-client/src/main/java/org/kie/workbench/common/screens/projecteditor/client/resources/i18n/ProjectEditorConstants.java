@@ -87,11 +87,15 @@ public interface ProjectEditorConstants
 
     String BuildAndDeploy();
 
+    String BuildAndDeployAndProvision();
+
     String SaveBeforeBuildAndDeploy();
 
     String Building();
 
     String BuildSuccessful();
+
+    String DeploySuccessful();
 
     String BuildFailed();
 
@@ -271,11 +275,11 @@ public interface ProjectEditorConstants
 
     String BuildProcessStarted();
 
-    String UserName();
+    String ContainerId();
 
-    String Password();
+    String ServerTemplate();
 
-    String ServerURL();
+    String StartContainer();
 
     String FieldMandatory0( final String fieldName );
 
@@ -314,5 +318,7 @@ public interface ProjectEditorConstants
     String DependencyIsMissingAGroupId();
 
     String Dependency();
+
+    String NoServersAvailableForProvisioning();
 
 }
