@@ -24,6 +24,7 @@ import org.guvnor.common.services.project.model.Package;
 import org.kie.workbench.common.services.shared.project.KieProjectService;
 import org.uberfire.backend.vfs.Path;
 import org.uberfire.ext.editor.commons.backend.validation.FileNameValidator;
+import org.uberfire.ext.editor.commons.backend.validation.ValidationUtils;
 
 /**
  * Package Name validation
@@ -58,6 +59,9 @@ public class PackageNameValidator implements FileNameValidator {
 
     @Override
     public boolean isValid( final String value ) {
+        if ( value == null ) {
+            return false;
+        }
         final Map<String, Boolean> results = evaluateIdentifiers( value.split( "\\.",
                                                                                -1 ) );
         return !results.containsValue( Boolean.FALSE );
