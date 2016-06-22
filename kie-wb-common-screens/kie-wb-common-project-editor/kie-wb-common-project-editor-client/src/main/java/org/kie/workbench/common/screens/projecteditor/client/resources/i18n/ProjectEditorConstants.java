@@ -87,8 +87,6 @@ public interface ProjectEditorConstants
 
     String BuildAndDeploy();
 
-    String BuildAndDeployAndProvision();
-
     String SaveBeforeBuildAndDeploy();
 
     String Building();
@@ -280,6 +278,8 @@ public interface ProjectEditorConstants
     String ServerTemplate();
 
     String StartContainer();
+
+    String ContainerIdAlreadyInUse();
 
     String FieldMandatory0( final String fieldName );
 

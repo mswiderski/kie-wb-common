@@ -17,6 +17,7 @@
 package org.kie.workbench.common.screens.projecteditor.client.editor;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -25,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 import javax.enterprise.event.Event;
 
+import com.google.common.collect.Sets;
 import com.google.gwtmockito.GwtMock;
 import com.google.gwtmockito.GwtMockitoTestRunner;
 import org.guvnor.common.services.project.builder.model.BuildMessage;
@@ -50,6 +52,8 @@ import org.jboss.errai.common.client.api.RemoteCallback;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.kie.server.controller.api.model.spec.ContainerSpec;
+import org.kie.server.controller.api.model.spec.ServerTemplate;
 import org.kie.workbench.common.screens.projecteditor.client.editor.extension.BuildOptionExtension;
 import org.kie.workbench.common.screens.projecteditor.client.resources.ProjectEditorResources;
 import org.kie.workbench.common.screens.projecteditor.client.validation.ProjectNameValidator;
@@ -62,6 +66,7 @@ import org.kie.workbench.common.services.shared.validation.ValidationService;
 import org.kie.workbench.common.widgets.client.resources.i18n.CommonConstants;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatcher;
+import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -80,10 +85,7 @@ import org.uberfire.mvp.PlaceRequest;
 import org.uberfire.workbench.events.NotificationEvent;
 
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.argThat;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.eq;
 
 @RunWith(GwtMockitoTestRunner.class)
 public class ProjectScreenPresenterTest {
@@ -107,6 +109,9 @@ public class ProjectScreenPresenterTest {
     @GwtMock
     @SuppressWarnings("unused")
     private com.google.gwt.user.client.ui.Widget dependenciesPart;
+
+    @Mock
+    private DeploymentScreenPopupViewImpl deploymentScreenPopupView;
 
     @Spy
     private MockLockManagerInstances lockManagerInstanceProvider = new MockLockManagerInstances();
@@ -246,6 +251,80 @@ public class ProjectScreenPresenterTest {
     }
 
     @Test
+    public void testBuildAndDeployCommandSingleServerTemplate() {
+        final ServerTemplate serverTemplate = new ServerTemplate("id", "name");
+        when(specManagementServiceMock.listServerTemplates()).thenReturn(Collections.singletonList(serverTemplate));
+
+        presenter.triggerBuildAndDeploy();
+
+        ArgumentCaptor<ContainerSpec> containerSpecArgumentCaptor = ArgumentCaptor.forClass(ContainerSpec.class);
+        verify( specManagementServiceMock ).saveContainerSpec( eq(serverTemplate.getId()), containerSpecArgumentCaptor.capture() );
+        final ContainerSpec containerSpec = containerSpecArgumentCaptor.getValue();
+        assertEquals(project.getPom().getGav().getArtifactId(), containerSpec.getContainerName());
+
+        verify( notificationEvent ).fire( argThat( new ArgumentMatcher<NotificationEvent>() {
+            @Override
+            public boolean matches( final Object argument ) {
+                final NotificationEvent event = (NotificationEvent) argument;
+                final String notification = event.getNotification();
+                final NotificationEvent.NotificationType type = event.getType();
+
+                return notification.equals( ProjectEditorResources.CONSTANTS.BuildSuccessful() ) &&
+                        type.equals( NotificationEvent.NotificationType.SUCCESS );
+            }
+        } ) );
+        verify( notificationEvent ).fire( argThat( new ArgumentMatcher<NotificationEvent>() {
+            @Override
+            public boolean matches( final Object argument ) {
+                final NotificationEvent event = (NotificationEvent) argument;
+                final String notification = event.getNotification();
+                final NotificationEvent.NotificationType type = event.getType();
+
+                return notification.equals( ProjectEditorResources.CONSTANTS.DeploySuccessful() ) &&
+                        type.equals( NotificationEvent.NotificationType.SUCCESS );
+            }
+        } ) );
+        verify( notificationEvent, times( 2 ) ).fire( any( NotificationEvent.class ) );
+        verifyBusyShowHideAnyString( 2, 2 );
+    }
+
+    @Test
+    public void testBuildAndDeployCommandSingleServerTemplateContainerExists() {
+        final String containerName = project.getPom().getGav().getArtifactId();
+        final ServerTemplate serverTemplate = new ServerTemplate("id", "name");
+        serverTemplate.addContainerSpec(new ContainerSpec(containerName, containerName, null, null, null, null));
+        when(specManagementServiceMock.listServerTemplates()).thenReturn(Collections.singletonList(serverTemplate));
+
+        presenter.triggerBuildAndDeploy();
+
+        verify(deploymentScreenPopupView).setValidateExistingContainerCallback(any(DeploymentScreenPopupViewImpl.ValidateExistingContainerCallback.class));
+        verify(deploymentScreenPopupView).setContainerId(containerName);
+        verify(deploymentScreenPopupView).setStartContainer(true);
+        verify(deploymentScreenPopupView).configure(any(com.google.gwt.user.client.Command.class));
+        verify(deploymentScreenPopupView).show();
+        verifyNoMoreInteractions(deploymentScreenPopupView);
+    }
+
+    @Test
+    public void testBuildAndDeployCommandMultipleServerTemplate() {
+        final String containerName = project.getPom().getGav().getArtifactId();
+        final ServerTemplate serverTemplate1 = new ServerTemplate("id1", "name1");
+        final ServerTemplate serverTemplate2 = new ServerTemplate("id2", "name2");
+
+        when(specManagementServiceMock.listServerTemplates()).thenReturn(Arrays.asList(serverTemplate1, serverTemplate2));
+
+        presenter.triggerBuildAndDeploy();
+
+        verify(deploymentScreenPopupView).setValidateExistingContainerCallback(any(DeploymentScreenPopupViewImpl.ValidateExistingContainerCallback.class));
+        verify(deploymentScreenPopupView).setContainerId(containerName);
+        verify(deploymentScreenPopupView).setStartContainer(true);
+        verify(deploymentScreenPopupView).addServerTemplates(eq(Sets.newHashSet("id1", "id2")));
+        verify(deploymentScreenPopupView).configure(any(com.google.gwt.user.client.Command.class));
+        verify(deploymentScreenPopupView).show();
+        verifyNoMoreInteractions(deploymentScreenPopupView);
+    }
+
+    @Test
     public void testBuildAndDeployCommand() {
         presenter.triggerBuildAndDeploy();
 
@@ -300,73 +379,6 @@ public class ProjectScreenPresenterTest {
     }
 
     @Test
-    public void testBuildAndDeployAndProvisionCommand() {
-        presenter.triggerBuildAndDeployAndProvision("my container", "my server");
-
-        verify( notificationEvent, times( 2 ) ).fire( any( NotificationEvent.class ) );
-
-        verify( notificationEvent ).fire( argThat( new ArgumentMatcher<NotificationEvent>() {
-            @Override
-            public boolean matches( final Object argument ) {
-                final NotificationEvent event = (NotificationEvent) argument;
-                final String notification = event.getNotification();
-                final NotificationEvent.NotificationType type = event.getType();
-
-                return notification.equals( ProjectEditorResources.CONSTANTS.BuildSuccessful() ) &&
-                        type.equals( NotificationEvent.NotificationType.SUCCESS );
-            }
-        } ) );
-
-        verify( notificationEvent ).fire( argThat( new ArgumentMatcher<NotificationEvent>() {
-            @Override
-            public boolean matches( final Object argument ) {
-                final NotificationEvent event = (NotificationEvent) argument;
-                final String notification = event.getNotification();
-                final NotificationEvent.NotificationType type = event.getType();
-
-                return notification.equals( ProjectEditorResources.CONSTANTS.DeploySuccessful() ) &&
-                        type.equals( NotificationEvent.NotificationType.SUCCESS );
-            }
-        } ) );
-
-        verifyBusyShowHideAnyString( 2, 2 );
-    }
-
-    @Test
-    public void testBuildAndDeployAndProvisionCommandFail() {
-//        cd jb                                                                                 );
-        BuildMessage message = mock( BuildMessage.class );
-        List<BuildMessage> messages = new ArrayList<BuildMessage>();
-        messages.add( message );
-
-        BuildResults results = mock( BuildResults.class );
-        when( results.getErrorMessages() ).thenReturn( messages );
-
-        when( buildService.buildAndDeploy( any( KieProject.class ),
-                any( DeploymentMode.class ) ) ).thenReturn( results );
-
-        presenter.triggerBuildAndDeployAndProvision("my container", "my server");
-
-        verify( notificationEvent ).fire( argThat(new ArgumentMatcher<NotificationEvent>() {
-            @Override
-            public boolean matches(final Object argument) {
-                final NotificationEvent event = (NotificationEvent) argument;
-                final String notification = event.getNotification();
-                final NotificationEvent.NotificationType type = event.getType();
-
-                return notification.equals(ProjectEditorResources.CONSTANTS.BuildFailed()) &&
-                        type.equals(NotificationEvent.NotificationType.ERROR);
-            }
-        }) );
-
-        verify( view,
-                times( 1 ) ).showBusyIndicator(eq(ProjectEditorResources.CONSTANTS.Building()));
-        //There are two calls to "hide" by this stage; one from the view initialisation one for the build
-        verify( view,
-                times( 2 ) ).hideBusyIndicator();
-    }
-
-    @Test
     public void testAlreadyRunningBuild() {
         constructProjectScreenPresenter( buildServiceCaller(), new CallerMock<SpecManagementService>( specManagementServiceMock ) );
 
@@ -385,20 +397,6 @@ public class ProjectScreenPresenterTest {
 
         presenter.triggerBuildAndDeploy();
         presenter.triggerBuildAndDeploy();
-
-        verify( view, times( 1 ) ).showABuildIsAlreadyRunning();
-        verify( notificationEvent, never() ).fire( any( NotificationEvent.class ) );
-        verifyBusyShowHideAnyString( 3, 2 );
-    }
-
-    @Test
-    public void testAlreadyRunningBuildAndDeployAndProvision() {
-        constructProjectScreenPresenter( buildServiceCaller(), new CallerMock<SpecManagementService>(specManagementServiceMock) );
-
-        presenter.onStartup( mock( PlaceRequest.class ) );
-
-        presenter.triggerBuildAndDeployAndProvision( "my container", "my server" );
-        presenter.triggerBuildAndDeployAndProvision("my container", "my server");
 
         verify( view, times( 1 ) ).showABuildIsAlreadyRunning();
         verify( notificationEvent, never() ).fire( any( NotificationEvent.class ) );
@@ -428,7 +426,7 @@ public class ProjectScreenPresenterTest {
     @Test
     public void testIsDirtyBuildAndDeploy() {
         model.setPOM( mock( POM.class ) ); // causes isDirty evaluates as true
-        presenter.triggerBuildAndDeployAndProvision( "my container", "my server" );
+        presenter.triggerBuildAndDeploy();
 
         verify( view, times( 1 ) ).showSaveBeforeContinue(any(Command.class), any(Command.class), any(Command.class));
         verify( notificationEvent, never() ).fire( any( NotificationEvent.class ) );
@@ -666,7 +664,8 @@ public class ProjectScreenPresenterTest {
                                                 lockManagerInstanceProvider,
                                                 mock( EventSourceMock.class ),
                                                 conflictingRepositoriesPopup,
-                                                specManagementServiceCaller) {
+                                                specManagementServiceCaller,
+                                                deploymentScreenPopupView) {
 
             @Override
             protected void setupPathToPomXML() {
