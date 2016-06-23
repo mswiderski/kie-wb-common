@@ -16,8 +16,6 @@
 
 package org.kie.workbench.common.screens.projecteditor.client.editor;
 
-import java.util.Collection;
-
 import com.google.gwt.user.client.ui.IsWidget;
 import com.google.gwt.user.client.ui.Widget;
 import org.guvnor.common.services.project.model.POM;
@@ -25,7 +23,6 @@ import org.guvnor.common.services.project.model.ProjectImports;
 import org.guvnor.common.services.project.model.ProjectRepositories;
 import org.guvnor.common.services.shared.metadata.model.Metadata;
 import org.gwtbootstrap3.client.ui.ButtonGroup;
-import org.kie.server.controller.api.model.spec.ServerTemplate;
 import org.kie.workbench.common.services.shared.kmodule.KModuleModel;
 import org.kie.workbench.common.services.shared.whitelist.WhiteList;
 import org.uberfire.ext.widgets.common.client.common.HasBusyIndicator;
@@ -66,11 +63,6 @@ public interface ProjectScreenView
         void triggerBuild();
 
         void triggerBuildAndDeploy();
-
-        void triggerBuildAndDeployAndProvision( String containerId,
-                                    String serverTemplate );
-
-        void loadServerTemplates();
 
     }
 
@@ -173,11 +165,4 @@ public interface ProjectScreenView
                                  Command noCommand,
                                  Command cancelCommand );
 
-    void setServerTemplates(Collection<ServerTemplate> serverTemplates);
-
-    String getContainerId();
-
-    String getServerTemplate();
-
-    boolean getStartContainer();
 }

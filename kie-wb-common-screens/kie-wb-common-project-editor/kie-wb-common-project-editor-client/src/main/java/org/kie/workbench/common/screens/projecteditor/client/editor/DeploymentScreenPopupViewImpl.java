@@ -15,6 +15,8 @@
 
 package org.kie.workbench.common.screens.projecteditor.client.editor;
 
+import java.util.Iterator;
+import java.util.Set;
 import javax.inject.Inject;
 
 import com.google.gwt.core.client.GWT;
@@ -33,11 +35,9 @@ import org.gwtbootstrap3.client.ui.constants.ValidationState;
 import org.gwtbootstrap3.extras.select.client.ui.Option;
 import org.gwtbootstrap3.extras.select.client.ui.Select;
 import org.jboss.errai.security.shared.api.identity.User;
-import org.kie.server.controller.api.model.spec.ServerTemplate;
 import org.kie.workbench.common.screens.projecteditor.client.resources.ProjectEditorResources;
 import org.uberfire.ext.widgets.common.client.common.popups.BaseModal;
 import org.uberfire.ext.widgets.common.client.common.popups.footers.ModalFooterOKCancelButtons;
-import org.uberfire.ext.widgets.core.client.resources.i18n.CoreConstants;
 
 public class DeploymentScreenPopupViewImpl extends BaseModal {
 
@@ -81,6 +81,8 @@ public class DeploymentScreenPopupViewImpl extends BaseModal {
 
     private Command callbackCommand;
 
+    private ValidateExistingContainerCallback validateExistingContainerCallback;
+
     private final Command okCommand = new Command() {
         @Override
         public void execute() {
@@ -92,7 +94,14 @@ public class DeploymentScreenPopupViewImpl extends BaseModal {
                 return;
             }
 
-            if ( isEmpty(serverTemplateDropdown.getValue()) ) {
+            if ( validateExistingContainerCallback != null && validateExistingContainerCallback.containerNameExists( containerIdText.getText() ) ) {
+                containerIdTextGroup.setValidationState(ValidationState.ERROR);
+                containerIdTextHelpInline.setText(ProjectEditorResources.CONSTANTS.ContainerIdAlreadyInUse());
+
+                return;
+            }
+
+            if ( serverTemplateGroup.isVisible() && isEmpty(serverTemplateDropdown.getValue()) ) {
                 serverTemplateGroup.setValidationState(ValidationState.ERROR);
                 serverTemplateHelpInline.setText(ProjectEditorResources.CONSTANTS.FieldMandatory0( "Server template" ));
 
@@ -102,6 +111,7 @@ public class DeploymentScreenPopupViewImpl extends BaseModal {
             if ( callbackCommand != null ) {
                 callbackCommand.execute();
             }
+
             hide();
         }
 
@@ -130,33 +140,52 @@ public class DeploymentScreenPopupViewImpl extends BaseModal {
         setFade( true );
         setRemoveOnHide( true );
 
-        add( new ModalBody() {{
-            add( uiBinder.createAndBindUi( DeploymentScreenPopupViewImpl.this ) );
-        }} );
+        final ModalBody modalBody = GWT.create(ModalBody.class);
+        modalBody.add( uiBinder.createAndBindUi( DeploymentScreenPopupViewImpl.this ) );
+        add( modalBody );
         add( footer );
 
-        addServerTemplateSelectEntry();
     }
 
-    public void configure( Command command ) {
+    @Override
+    public void hide() {
+        super.hide();
+        serverTemplateGroup.setVisible(false);
+        containerIdText.setText(null);
+        startContainerCheck.setValue(null);
+        serverTemplateDropdown.setValue((String)null);
+        final Iterator<Widget> options = serverTemplateDropdown.iterator();
+        while(options.hasNext()){
+            options.next();
+            options.remove();
+        }
+        serverTemplateDropdown.refresh();
+        validateExistingContainerCallback = null;
+
+        containerIdTextGroup.setValidationState(ValidationState.NONE);
+        containerIdTextHelpInline.setText("");
+
+        serverTemplateGroup.setValidationState(ValidationState.NONE);
+        serverTemplateHelpInline.setText("");
+    }
+
+    public void configure(Command command ) {
         this.callbackCommand = command;
     }
 
-    public void addServerTemplateSelectEntry() {
-        final Option option = new Option();
-        option.setText( CoreConstants.INSTANCE.SelectEntry() );
-        serverTemplateDropdown.add(option);
+    public void addServerTemplates( final Set<String> serverTemplateIds ) {
+        for (final String id : serverTemplateIds){
+            final Option option = GWT.create(Option.class);
+            option.setText( id );
+            option.setValue( id );
+            serverTemplateDropdown.add(option);
+        }
         serverTemplateDropdown.refresh();
+        serverTemplateGroup.setVisible(true);
     }
 
-    public void addServerTemplate( final ServerTemplate serverTemplate ) {
-        final String text = serverTemplate.getName();
-        final String value = serverTemplate.getName();
-        final Option option = new Option();
-        option.setText( text );
-        option.setValue( value );
-        serverTemplateDropdown.add(option);
-        serverTemplateDropdown.refresh();
+    public void setContainerId(final String containerId) {
+        this.containerIdText.setText(containerId);
     }
 
     public String getContainerId() {
@@ -167,8 +196,22 @@ public class DeploymentScreenPopupViewImpl extends BaseModal {
         return this.serverTemplateDropdown.getValue();
     }
 
+    public void setStartContainer(final boolean startContainer){
+        startContainerCheck.setValue(startContainer);
+    }
+
     public boolean getStartContainer() {
         return startContainerCheck.getValue();
+    }
+
+    public void setValidateExistingContainerCallback(final ValidateExistingContainerCallback validateExistingContainerCallback) {
+        this.validateExistingContainerCallback = validateExistingContainerCallback;
+    }
+
+    interface ValidateExistingContainerCallback {
+
+        boolean containerNameExists(String containerName);
+
     }
 
 }

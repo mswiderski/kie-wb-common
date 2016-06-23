@@ -16,7 +16,6 @@
 
 package org.kie.workbench.common.screens.projecteditor.client.editor;
 
-import java.util.Collection;
 import javax.enterprise.context.Dependent;
 import javax.inject.Inject;
 
@@ -26,7 +25,6 @@ import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.uibinder.client.UiBinder;
 import com.google.gwt.uibinder.client.UiField;
 import com.google.gwt.uibinder.client.UiHandler;
-import com.google.gwt.user.client.Command;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.DeckPanel;
@@ -50,7 +48,6 @@ import org.gwtbootstrap3.client.ui.constants.ButtonSize;
 import org.gwtbootstrap3.client.ui.constants.ButtonType;
 import org.gwtbootstrap3.client.ui.constants.IconType;
 import org.gwtbootstrap3.client.ui.constants.Toggle;
-import org.kie.server.controller.api.model.spec.ServerTemplate;
 import org.kie.workbench.common.screens.projecteditor.client.forms.KModuleEditorPanel;
 import org.kie.workbench.common.screens.projecteditor.client.forms.dependencies.DependencyGrid;
 import org.kie.workbench.common.screens.projecteditor.client.forms.repositories.RepositoriesWidgetPresenter;
@@ -90,7 +87,6 @@ public class ProjectScreenViewImpl
     private MetadataWidget importsPageMetadata;
     private RepositoriesWidgetPresenter repositoriesWidgetPresenter;
     private DependencyGrid dependencyGrid;
-    private Boolean supportDeployToRuntime = Boolean.TRUE;
     private Boolean isGAVCheckDisabled = Boolean.FALSE;
     private Widget projectScreen;
     private SimplePanel layout;
@@ -132,9 +128,6 @@ public class ProjectScreenViewImpl
 
     @Inject
     BusyIndicatorView busyIndicatorView;
-
-    @Inject
-    DeploymentScreenPopupViewImpl deploymentScreenPopupView;
 
     public ProjectScreenViewImpl() {
     }
@@ -415,25 +408,6 @@ public class ProjectScreenViewImpl
                     } );
                 }} );
 
-                add( new AnchorListItem( ProjectEditorResources.CONSTANTS.BuildAndDeployAndProvision() ) {{
-                    addClickHandler( new ClickHandler() {
-                        @Override
-                        public void onClick( ClickEvent event ) {
-                            presenter.loadServerTemplates();
-                            deploymentScreenPopupView.configure( new Command() {
-                                @Override
-                                public void execute() {
-                                    String containerId = deploymentScreenPopupView.getContainerId();
-                                    String serverTemplate = deploymentScreenPopupView.getServerTemplate();
-
-                                    presenter.triggerBuildAndDeployAndProvision( containerId, serverTemplate );
-                                    deploymentScreenPopupView.hide();
-                                }
-                            } );
-                        }
-                    } );
-                }} );
-
             }} );
         }};
     }
@@ -595,29 +569,4 @@ public class ProjectScreenViewImpl
         popup.show();
     }
 
-    @Override
-    public void setServerTemplates(Collection<ServerTemplate> serverTemplates) {
-        if (serverTemplates != null && !serverTemplates.isEmpty()) {
-            for (ServerTemplate serverTemplate : serverTemplates) {
-                deploymentScreenPopupView.addServerTemplate(serverTemplate);
-            }
-            // show it only when there are active servers
-            deploymentScreenPopupView.show();
-        }
-    }
-
-    @Override
-    public String getContainerId() {
-        return deploymentScreenPopupView.getContainerId();
-    }
-
-    @Override
-    public String getServerTemplate() {
-        return deploymentScreenPopupView.getServerTemplate();
-    }
-
-    @Override
-    public boolean getStartContainer() {
-        return deploymentScreenPopupView.getStartContainer();
-    }
 }

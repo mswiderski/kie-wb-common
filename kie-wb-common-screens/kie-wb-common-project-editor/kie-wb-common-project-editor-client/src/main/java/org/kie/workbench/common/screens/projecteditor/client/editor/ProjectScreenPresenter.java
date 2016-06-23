@@ -22,12 +22,15 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.enterprise.context.Dependent;
 import javax.enterprise.event.Event;
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.Instance;
 import javax.inject.Inject;
 
+import com.google.common.collect.FluentIterable;
+import com.google.common.collect.Maps;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.ui.IsWidget;
 import com.google.gwt.user.client.ui.Widget;
@@ -169,6 +172,8 @@ public class ProjectScreenPresenter
 
     private ConflictingRepositoriesPopup conflictingRepositoriesPopup;
 
+    private DeploymentScreenPopupViewImpl deploymentScreenPopupView;
+
     //Used by ErrorCallback for "Build" operation.
     private Map<Class<? extends Throwable>, CommandWithThrowableDrivenErrorCallback.CommandWithThrowable> onBuildAndDeployGavExistsHandler = new HashMap<Class<? extends Throwable>, CommandWithThrowableDrivenErrorCallback.CommandWithThrowable>() {{
         put( GAVAlreadyExistsException.class,
@@ -191,27 +196,6 @@ public class ProjectScreenPresenter
              } );
     }};
 
-    private Map<Class<? extends Throwable>, CommandWithThrowableDrivenErrorCallback.CommandWithThrowable> onBuildAndDeployAndProvisionGavExistsHandler = new HashMap<Class<? extends Throwable>, CommandWithThrowableDrivenErrorCallback.CommandWithThrowable>() {{
-        put( GAVAlreadyExistsException.class,
-                new CommandWithThrowableDrivenErrorCallback.CommandWithThrowable() {
-                    @Override
-                    public void execute( final Throwable parameter ) {
-                        view.hideBusyIndicator();
-                        conflictingRepositoriesPopup.setContent( model.getPOM().getGav(),
-                                ( (GAVAlreadyExistsException) parameter ).getRepositories(),
-                                new Command() {
-                                    @Override
-                                    public void execute() {
-                                        conflictingRepositoriesPopup.hide();
-                                        getBuildDeployProvisionCommand(DeploymentMode.FORCED, view.getContainerId(), view.getServerTemplate()).execute();
-
-                                    }
-                                } );
-                        conflictingRepositoriesPopup.show();
-                    }
-                } );
-    }};
-
     public ProjectScreenPresenter() {
     }
 
@@ -230,7 +214,8 @@ public class ProjectScreenPresenter
                                    final Instance<LockManager> lockManagerInstanceProvider,
                                    final Event<ForceUnlockEvent> forceLockReleaseEvent,
                                    final ConflictingRepositoriesPopup conflictingRepositoriesPopup,
-                                   final Caller<SpecManagementService> specManagementService) {
+                                   final Caller<SpecManagementService> specManagementService,
+                                   final DeploymentScreenPopupViewImpl deploymentScreenPopupView) {
         this.view = view;
         view.setPresenter( this );
         view.setGAVCheckDisabledSetting( ApplicationPreferences.getBooleanPref( ProjectRepositoryResolver.CONFLICTING_GAV_CHECK_DISABLED ) );
@@ -277,6 +262,8 @@ public class ProjectScreenPresenter
                 return ( title == null ) ? ProjectScreenPresenter.this.getTitle() : title;
             }
         };
+
+        this.deploymentScreenPopupView = deploymentScreenPopupView;
     }
 
     private void configureBuildExtensions( final Project project,
@@ -894,30 +881,68 @@ public class ProjectScreenPresenter
     }
 
     @Override
-    public void loadServerTemplates() {
-        specManagementService.call(new RemoteCallback<Collection<ServerTemplate>>() {
-            @Override
-            public void callback(Collection<ServerTemplate> serverTemplates) {
-
-                view.setServerTemplates(serverTemplates);
-
-            }
-        }).listServerTemplates();
-    }
-
-    @Override
     public void triggerBuild() {
         getSafeExecutedCommand( getBuildCommand() ).execute();
     }
 
     @Override
     public void triggerBuildAndDeploy() {
-        getSafeExecutedCommand( getBuildDeployCommand(DeploymentMode.VALIDATED) ).execute();
-    }
+        specManagementService.call(new RemoteCallback<Collection<ServerTemplate>>() {
+            @Override
+            public void callback(final Collection<ServerTemplate> serverTemplates) {
+                //TODO use config for using defaults or not
+                final String defaultContainerId = project.getPom().getGav().getArtifactId();
+                final boolean defaultStartContainer = true;
+                if(serverTemplates.isEmpty()){
+                    getSafeExecutedCommand( getBuildDeployCommand(DeploymentMode.VALIDATED) ).execute();
+                } else if(serverTemplates.size() == 1){
+                    final ServerTemplate serverTemplate = serverTemplates.iterator().next();
+                    final Set<String> existingContainers = FluentIterable.from(serverTemplate.getContainersSpec()).transform(s -> s.getContainerName()).toSet();
+                    if(existingContainers.contains(defaultContainerId) == false){
+                        getSafeExecutedCommand( getBuildDeployProvisionCommand(DeploymentMode.VALIDATED, defaultContainerId, serverTemplate.getId(), defaultStartContainer) ).execute();
+                    } else {
+                        deploymentScreenPopupView.setValidateExistingContainerCallback(containerName -> existingContainers.contains(containerName));
+                        deploymentScreenPopupView.setContainerId(defaultContainerId);
+                        deploymentScreenPopupView.setStartContainer(defaultStartContainer);
+                        deploymentScreenPopupView.configure( new com.google.gwt.user.client.Command() {
+                            @Override
+                            public void execute() {
+                                final String containerId = deploymentScreenPopupView.getContainerId();
+                                final boolean startContainer = deploymentScreenPopupView.getStartContainer();
 
-    @Override
-    public void triggerBuildAndDeployAndProvision(String containerId, String serverTemplate) {
-        getSafeExecutedCommand( getBuildDeployProvisionCommand(DeploymentMode.VALIDATED, containerId, serverTemplate) ).execute();
+                                getSafeExecutedCommand( getBuildDeployProvisionCommand(DeploymentMode.VALIDATED, containerId, serverTemplate.getId(), startContainer) ).execute();
+
+                                deploymentScreenPopupView.hide();
+                            }
+                        } );
+                        deploymentScreenPopupView.show();
+                    }
+                } else {
+                    final Map<String, ServerTemplate> serverTemplatesIds = Maps.uniqueIndex(serverTemplates, s -> s.getId());
+                    final Map<String, Set<String>> containerNames = Maps.transformEntries(serverTemplatesIds, (id, server) ->
+                            FluentIterable.from(server.getContainersSpec()).transform(c -> c.getContainerName()).toSet()
+                    );
+                    deploymentScreenPopupView.addServerTemplates(FluentIterable.from(serverTemplatesIds.keySet()).toSortedSet(String.CASE_INSENSITIVE_ORDER));
+                    deploymentScreenPopupView.setValidateExistingContainerCallback(containerName -> FluentIterable.from(containerNames.get(deploymentScreenPopupView.getServerTemplate())).contains(containerName));
+                    deploymentScreenPopupView.setContainerId(defaultContainerId);
+                    deploymentScreenPopupView.setStartContainer(defaultStartContainer);
+                    deploymentScreenPopupView.configure( new com.google.gwt.user.client.Command() {
+                        @Override
+                        public void execute() {
+                            final String containerId = deploymentScreenPopupView.getContainerId();
+                            final String serverTemplate = deploymentScreenPopupView.getServerTemplate();
+                            final boolean startContainer = deploymentScreenPopupView.getStartContainer();
+
+                            getSafeExecutedCommand( getBuildDeployProvisionCommand(DeploymentMode.VALIDATED, containerId, serverTemplate, startContainer) ).execute();
+
+                            deploymentScreenPopupView.hide();
+                        }
+                    } );
+                    deploymentScreenPopupView.show();
+                }
+            }
+        }).listServerTemplates();
+
     }
 
     private Command getBuildCommand() {
@@ -940,12 +965,12 @@ public class ProjectScreenPresenter
         };
     }
 
-    private Command getBuildDeployProvisionCommand(final DeploymentMode mode, final String containerId, final String serverTemplate) {
+    private Command getBuildDeployProvisionCommand(final DeploymentMode mode, final String containerId, final String serverTemplate, final boolean startContainer) {
         return new Command() {
             @Override
             public void execute() {
                 view.showBusyIndicator( ProjectEditorResources.CONSTANTS.Building() );
-                buildAndDeployAndProvision(mode, containerId, serverTemplate);
+                buildAndDeployAndProvision(mode, containerId, serverTemplate, startContainer);
             }
         };
     }
@@ -963,16 +988,37 @@ public class ProjectScreenPresenter
                 new BuildFailureErrorCallback( view, onBuildAndDeployGavExistsHandler ) ).buildAndDeploy(project, mode);
     }
 
-    private void buildAndDeployAndProvision( final DeploymentMode mode, final String containerId, final String serverTemplate ) {
+    private void buildAndDeployAndProvision( final DeploymentMode mode, final String containerId, final String serverTemplate, final boolean startContainer ) {
 
         building = true;
-        buildServiceCaller.call( getBuildDeployProvisionSuccessCallback(containerId, serverTemplate),
-                                 new BuildFailureErrorCallback( view,
-                                                                onBuildAndDeployAndProvisionGavExistsHandler ) ).buildAndDeploy( project,
-                                                                                                                     mode );
+        buildServiceCaller.call( getBuildDeployProvisionSuccessCallback(containerId, serverTemplate, startContainer),
+                new BuildFailureErrorCallback( view, getOnBuildAndDeployAndProvisionGavExistsHandler(containerId, serverTemplate, startContainer)) ).buildAndDeploy( project, mode );
     }
 
-    private RemoteCallback getBuildDeployProvisionSuccessCallback(final String containerId, final String serverTemplate) {
+    private Map<Class<? extends Throwable>, CommandWithThrowableDrivenErrorCallback.CommandWithThrowable> getOnBuildAndDeployAndProvisionGavExistsHandler(final String containerId, final String serverTemplate, final boolean startContainer) {
+        return new HashMap<Class<? extends Throwable>, CommandWithThrowableDrivenErrorCallback.CommandWithThrowable>() {{
+            put( GAVAlreadyExistsException.class,
+                    new CommandWithThrowableDrivenErrorCallback.CommandWithThrowable() {
+                        @Override
+                        public void execute( final Throwable parameter ) {
+                            view.hideBusyIndicator();
+                            conflictingRepositoriesPopup.setContent( model.getPOM().getGav(),
+                                    ( (GAVAlreadyExistsException) parameter ).getRepositories(),
+                                    new Command() {
+                                        @Override
+                                        public void execute() {
+                                            conflictingRepositoriesPopup.hide();
+                                            getBuildDeployProvisionCommand(DeploymentMode.FORCED, containerId, serverTemplate, startContainer).execute();
+
+                                        }
+                                    } );
+                            conflictingRepositoriesPopup.show();
+                        }
+                    } );
+        }};
+    }
+
+    private RemoteCallback getBuildDeployProvisionSuccessCallback(final String containerId, final String serverTemplate, final boolean startContainer) {
         return new RemoteCallback<BuildResults>() {
             @Override
             public void callback( final BuildResults result ) {
@@ -995,7 +1041,7 @@ public class ProjectScreenPresenter
                                notificationEvent.fire(new NotificationEvent(ProjectEditorResources.CONSTANTS.DeploySuccessful(),
                                        NotificationEvent.NotificationType.SUCCESS));
 
-                               if (view.getStartContainer()) {
+                               if (startContainer) {
                                    specManagementService.call(new RemoteCallback<Void>() {
                                           @Override
                                           public void callback(Void aVoid) {
