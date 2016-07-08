@@ -21,6 +21,7 @@ import java.util.List;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
+import org.guvnor.structure.security.RepositoryFeatures;
 import org.kie.workbench.common.workbench.client.resources.i18n.DefaultWorkbenchConstants;
 import org.uberfire.security.authz.Permission;
 import org.uberfire.security.authz.PermissionManager;
@@ -77,15 +78,11 @@ public class WorkbenchTreeProvider implements PermissionTreeProvider {
         if (parent.propertyEquals(NODE_TYPE, NODE_ROOT)) {
             List<PermissionNode> result = new ArrayList<>();
 
-            PermissionLeafNode node1 = createPermissionLeafNode(CONFIGURE_REPOSITORY, i18n.ConfigureRepositories());
-            PermissionLeafNode node2 = createPermissionLeafNode(PROMOTE_ASSETS, i18n.PromoteAssets());
-            PermissionLeafNode node3 = createPermissionLeafNode(RELEASE_PROJECT, i18n.ReleaseProjects());
+            PermissionLeafNode node1 = createPermissionLeafNode(RepositoryFeatures.CONFIGURE_REPOSITORY, i18n.ConfigureRepositories());
             PermissionLeafNode node4 = createPermissionLeafNode(MANAGE_DASHBOARDS, i18n.ManageDashboards());
             PermissionLeafNode node5 = createPermissionLeafNode(PLANNER_AVAILABLE, i18n.ResourcePlanner());
 
             result.add(node1);
-            result.add(node2);
-            result.add(node3);
             result.add(node4);
             result.add(node5);
 
